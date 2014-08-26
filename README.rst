@@ -27,10 +27,10 @@ Usage
 
 1. Update ``pelicanconf.py``:
 
-   1. Add ``pelican-entities`` to ``PLUGINS``.
+   1. Add ``entities`` to ``PLUGINS``.
           .. code-block:: python
           
-              PLUGINS = ['pelican-entities', ...]
+              PLUGINS = ['entities', ...]
 
    2. Disable default page and article generators:
 
