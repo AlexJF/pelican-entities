@@ -1,7 +1,5 @@
 from os.path import abspath, dirname, join, normpath
-
 from setuptools import setup
-
 
 setup(
 
@@ -22,9 +20,8 @@ setup(
     author_email = 'alexandrejorgefonseca@gmail.com',
     license = 'Apache',
     url = 'https://github.com/AlexJF/pelican-entities',
+    download_url = 'https://github.com/AlexJF/pelican-entities/archive/v0.1.0.zip',
     keywords = 'pelican blog static generic entities',
     description = ('A generator for Pelican, allowing the use of generic '
             'entities in place of the default page and article ones'),
-    long_description = open(normpath(join(dirname(abspath(__file__)),
-        'README.md'))).read()
 )
