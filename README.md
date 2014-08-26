@@ -152,7 +152,7 @@ ENTITY_TYPES = {
 }
 ```
 
-For a working example check [my site](www.alexjf.net) and [my site's source
+For a working example check [my site](http://www.alexjf.net) and [my site's source
 code](https://github.com/AlexJF/alexjf.net).
 
 ## Extending
