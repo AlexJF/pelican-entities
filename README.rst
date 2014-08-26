@@ -8,6 +8,8 @@ replaces the default Page and Article generators, allowing the definition of
 arbitrary content types, aka, entity types (e.g: projects, events) and
 associated indices/direct templates.
 
+Similar to nodes in Drupal.
+
 Install
 =======
 
@@ -91,8 +93,8 @@ New settings
 - ``TAG_TEMPLATE``: Template used for tag pages.
 - ``AUTHOR_TEMPLATE``: Template used for author pages.
 
-Themes
-======
+Context/Themes
+==============
 
 New available variables
 -----------------------
@@ -101,6 +103,18 @@ New available variables
 
   - ``url``: The url of the current page.
   - ``entity_type``: Type of the entity associated with this page.
+  - ``entity_types``: Dict having all declared entity types as keys and their
+    generators as values.
+  - ``<entity_type_name>``: For each declared entity type, an object is added to 
+    the context containing:
+
+    - ``entities``: All entities of that entity type.
+    - ``translations``: All translations of that entity type.
+    - ``tags``: All tags of that entity type.
+    - ``categories``: All categories of that entity type.
+    - ``authors``: All authors of that entity type.
+    - ``drafts``: All drafts of that entity type.
+    - ``drafts_translations``: All draft translations of that entity type.
 
 - Entity page:
 
