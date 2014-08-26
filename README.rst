@@ -24,37 +24,37 @@ Usage
 =====
 
 1. Update ``pelicanconf.py``:
-    1. Add ``pelican-entities`` to ``PLUGINS``.
-           
-            .. code-block:: python
+
+   1. Add ``pelican-entities`` to ``PLUGINS``.
+          .. code-block:: python
+          
+              PLUGINS = ['pelican-entities', ...]
+
+   2. Disable default page and article generators:
+
+          .. code-block:: python
             
-                PLUGINS = ['pelican-entities', ...]
+              PAGE_PATHS = []
+              ARTICLE_PATHS = []
+              DIRECT_TEMPLATES = []
+              PAGINATED_DIRECT_TEMPLATES = []
 
-    2. Disable default page and article generators:
+   3. Specify entity types to use in your site and their settings:
 
-            .. code-block:: python
-            
-                PAGE_PATHS = []
-                ARTICLE_PATHS = []
-                DIRECT_TEMPLATES = []
-                PAGINATED_DIRECT_TEMPLATES = []
+          .. code-block:: python
 
-    3. Specify entity types to use in your site and their settings:
-
-            .. code-block:: python
-
-                ENTITY_TYPES = {
-                    <type1_name>: {
-                        PATHS: [<type1_path1>, <type1_path2>, ...],
-                        EXCLUDES: [...],
-                        <type1_name>_URL: "...",
-                        <type1_name>_SAVE_AS: "...",
-                        ...
-                    },
-                    <type2_name>: {
-                        ...
-                    }
-                }
+              ENTITY_TYPES = {
+                  <type1_name>: {
+                      PATHS: [<type1_path1>, <type1_path2>, ...],
+                      EXCLUDES: [...],
+                      <type1_name>_URL: "...",
+                      <type1_name>_SAVE_AS: "...",
+                      ...
+                  },
+                  <type2_name>: {
+                      ...
+                  }
+              }
 
 2. Update theme to use new variables.
 3. Watch out for incompatible plugins (those that rely on the pages and 
@@ -98,31 +98,45 @@ New available variables
 -----------------------
 
 - Global:
-    - ``url``: The url of the current page.
-    - ``entity_type``: Type of the entity associated with this page.
+
+  - ``url``: The url of the current page.
+  - ``entity_type``: Type of the entity associated with this page.
+
 - Entity page:
-    - ``entity``: Contains the object describing an entity (replaces ``article``
-       or ``page``).
+
+  - ``entity``: Contains the object describing an entity (replaces ``article``
+    or ``page``).
+
 - Direct templates:
-    - ``direct``: Variable always equal to True when rendering a direct template.
+
+  - ``direct``: Variable always equal to True when rendering a direct template.
+
 - Tag, category, author pages:
-    - ``entities``: Replaces ``articles``.
-    - ``all_entitites``: Replaces ``all_articles``.
+
+  - ``entities``: Replaces ``articles``.
+  - ``all_entitites``: Replaces ``all_articles``.
+
 - Draft pages:
-    - ``entity``: Replaces ``article``.
-    - ``all_entities``: Replaces ``all_articles``.
+
+  - ``entity``: Replaces ``article``.
+  - ``all_entities``: Replaces ``all_articles``.
+
 - Paginated pages (direct templates or tag, category, author pages):
-    - ``entities_paginator``: Replaces ``articles_paginator``.
-    - ``entities_page``: Replaces ``articles_page``.
-    - ``entities_previous_page``: Replaces ``articles_previous_page``.
-    - ``entities_next_page``: Replaces ``articles_next_page``.
+
+  - ``entities_paginator``: Replaces ``articles_paginator``.
+  - ``entities_page``: Replaces ``articles_page``.
+  - ``entities_previous_page``: Replaces ``articles_previous_page``.
+  - ``entities_next_page``: Replaces ``articles_next_page``.
 
 Deleted variables
 -----------------
 - Entity page:
-    - ``category``: Access through ``entity.category``.
+
+  - ``category``: Access through ``entity.category``.
+
 - Direct templates:
-    - ``dates``: If you want to iterate in the opposite order do it explicitly.
+
+  - ``dates``: If you want to iterate in the opposite order do it explicitly.
 
 Example configuration
 ---------------------

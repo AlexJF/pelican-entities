@@ -1,6 +1,9 @@
 from os.path import abspath, dirname, join, normpath
 from setuptools import setup
 
+with open('README.rst') as f:
+    long_description = f.read()
+
 setup(
 
     # Basic package information:
@@ -24,4 +27,5 @@ setup(
     keywords = 'pelican blog static generic entities',
     description = ('A generator for Pelican, allowing the use of generic '
             'entities in place of the default page and article ones'),
+    long_description = long_description
 )
