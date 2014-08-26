@@ -11,7 +11,7 @@ To install the library, you can use
 [pip](http://www.pip-installer.org/en/latest/).
 
 ```bash
-$ pip install pelican-minify
+$ pip install pelican-entities
 ```
 
 
