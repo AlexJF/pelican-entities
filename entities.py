@@ -455,7 +455,7 @@ class EntityGenerator(generators.Generator):
             tags = list(map(itemgetter(1), tag_cloud))
             if tags:
                 max_count = max(tags)
-            steps = self.settings.get('TAG_CLOUD_STEPS')
+            steps = self.settings.get('TAG_CLOUD_STEPS', 1)
 
             # calculate word sizes
             self.tag_cloud = [
