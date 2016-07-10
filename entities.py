@@ -62,6 +62,7 @@ def get_default_entity_type_settings(entity_type):
     entity_type_lower = entity_type.lower()
 
     settings = {}
+    settings['SUBGENERATOR_CLASS'] = EntityGenerator.EntitySubGenerator
     settings['PATHS'] = [entity_type_lower]
     settings['EXCLUDES'] = []
 
@@ -524,9 +525,16 @@ class EntityGenerator(generators.Generator):
             entity_type_settings.update(get_default_entity_type_settings(entity_type))
             entity_type_settings.update(custom_entity_type_settings)
 
+            generator_factory = entity_type_settings.pop("SUBGENERATOR_CLASS")
+            if not callable(generator_factory):
+                import importlib
+                module_name, class_name = entity_type_generator.rsplit('.', 1)
+                module = importlib.import_module(module_name)
+                generator_factory = getattr(module, class_name)
+
             kwargs['settings'] = entity_type_settings
 
-            entity_type_generator = self.EntitySubGenerator(entity_type, *args, **kwargs)
+            entity_type_generator = generator_factory(entity_type, *args, **kwargs)
             self.entity_types[entity_type] = entity_type_generator
         entity_generator_init.send(self)
 
