@@ -1,4 +1,3 @@
-from os.path import abspath, dirname, join, normpath
 from setuptools import setup
 
 with open('README.rst') as f:
