@@ -92,6 +92,9 @@ New settings
 - ``CATEGORY_TEMPLATE``: Template used for category pages.
 - ``TAG_TEMPLATE``: Template used for tag pages.
 - ``AUTHOR_TEMPLATE``: Template used for author pages.
+- ``SUBGENERATOR_CLASS``: Optionally define a custom subgenerator class. This should
+  either be a callable matching the ``entities.EntityGenerator.EntitySubGenerator``
+  interface or an import path to such a callable which will be imported dynamically.
 
 Context/Themes
 ==============
