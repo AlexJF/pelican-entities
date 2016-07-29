@@ -79,6 +79,7 @@ Changes from default
 - ``PAGE_EXCLUDES`` and ``ARTICLE_EXCLUDES`` are replaced by ``EXCLUDES``.
 - ``PAGE_URL``, ``ARTICLE_URL``, ``PAGE_SAVE_AS`` and ``ARTICLE_SAVE_AS`` replaced by
   generic ``<entity_name>_URL`` and ``<entity_name>_SAVE_AS``.
+- ``ARTICLE_ORDER_BY`` and ``PAGE_ORDER_BY`` are removed in favour of `SORTER``.
 
 New settings
 ------------
@@ -86,8 +87,9 @@ New settings
   that entity type.
 - ``MANDATORY_PROPERTIES``: List of properties that has to be defined for an
   entity to be considered valid (by default, just date).
-- ``SORT_ATTRIBUTES``: List of properties used to sort entities. Date is 
-  always used as the last attribute.
+- ``SORTER``: Function taking list of entities as argument and which is responsible
+  for sorting it as desired. Default value is the result of a call to
+  ``entities.attribute_list_sorter(["date"], reverse=True)``
 - ``ARCHIVE_TEMPLATE``: Template used for archive pages.
 - ``CATEGORY_TEMPLATE``: Template used for category pages.
 - ``TAG_TEMPLATE``: Template used for tag pages.
@@ -163,7 +165,7 @@ This is the configuration I'm using on my site:
 
     ENTITY_TYPES = {
         "Page": {
-            "PATHS": ["."],
+            "PATHS": [""],
             "EXCLUDES": ["blog", "projects"],
             "PAGE_URL": "{slug}",
             "PAGE_SAVE_AS": "{slug}/index.html",
@@ -187,7 +189,7 @@ This is the configuration I'm using on my site:
         },
         "Project": {
             "PATHS": ["projects"],
-            "SORT_ATTRIBUTES": ["project_start"],
+            "SORTER": entities.attribute_list_sorter(["date", "project_start"], reverse=True),
             "PROJECT_URL": "projects/{category}/{slug}/",
             "PROJECT_SAVE_AS": "projects/{category}/{slug}/index.html",
             "PATH_METADATA": r".*/(?P<category>[^/]+)/(?P<slug>[^/]+)/.*",

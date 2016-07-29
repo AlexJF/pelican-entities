@@ -7,7 +7,7 @@ setup(
 
     # Basic package information:
     name = 'pelican-entities',
-    version = '0.1.0',
+    version = '0.2.0',
     py_modules = ('entities',),
 
     # Packaging options:
@@ -15,14 +15,14 @@ setup(
     include_package_data = True,
 
     # Package dependencies:
-    install_requires = ['pelican>=3.4.0'],
+    install_requires = ['pelican>=3.6.0'],
 
     # Metadata for PyPI:
     author = 'Alexandre Fonseca',
     author_email = 'alexandrejorgefonseca@gmail.com',
     license = 'Apache',
     url = 'https://github.com/AlexJF/pelican-entities',
-    download_url = 'https://github.com/AlexJF/pelican-entities/archive/v0.1.0.zip',
+    download_url = 'https://github.com/AlexJF/pelican-entities/archive/v0.2.0.zip',
     keywords = 'pelican blog static generic entities',
     description = ('A generator for Pelican, allowing the use of generic '
             'entities in place of the default page and article ones'),

@@ -43,6 +43,7 @@ entity_subgenerator_init = signal('entity_subgenerator_init')
 entity_subgenerator_pretaxonomy = signal('entity_subgenerator_pretaxonomy')
 entity_generator_finalized = signal('entity_generator_finalized')
 entity_subgenerator_finalized = signal('entity_subgenerator_finalized')
+entity_subgenerator_writer_finalized = signal('entity_subgenerator_writer_finalized')
 entity_subgenerator_write_entity = signal('entity_subgenerator_write_entity')
 entity_writer_finalized = signal('entity_writer_finalized')
 entity_subgenerator_preread = signal('entity_subgenerator_preread')
@@ -55,6 +56,10 @@ def get_generators(pelican_object):
 
 def register():
     signals.get_generators.connect(get_generators)
+
+
+def attribute_list_sorter(attr_list, reverse=False):
+    return lambda objects: objects.sort(key=attrgetter(*attr_list), reverse=reverse)
 
 
 def get_default_entity_type_settings(entity_type):
@@ -79,6 +84,8 @@ def get_default_entity_type_settings(entity_type):
     settings['AUTHOR_FEED_RSS'] = None
     settings['TRANSLATION_FEED_ATOM'] = None
     settings['TRANSLATION_FEED_RSS'] = None
+
+    settings['SORTER'] = attribute_list_sorter(["date"], True)
 
     settings[entity_type_upper + '_URL'] = entity_type_lower + '/{slug}.html'
     settings[entity_type_upper + '_SAVE_AS'] = os.path.join(entity_type_lower, '{slug}.html')
@@ -381,14 +388,14 @@ class EntityGenerator(generators.Generator):
             for f in self.get_files(
                     self.settings['PATHS'],
                     exclude=self.settings['EXCLUDES']):
-                entity = self.get_cached_data(f, None)
-                if entity is None:
+                entity_or_draft = self.get_cached_data(f, None)
+                if entity_or_draft is None:
                     entity_class = EntityFactory(
                         self.entity_type,
                         self.settings['MANDATORY_PROPERTIES'],
                         self.settings['DEFAULT_TEMPLATE'])
                     try:
-                        entity = self.readers.read_file(
+                        entity_or_draft = self.readers.read_file(
                             base_path=self.path, path=f, content_class=entity_class,
                             context=self.context,
                             preread_signal=entity_subgenerator_preread,
@@ -398,76 +405,49 @@ class EntityGenerator(generators.Generator):
                     except Exception as e:
                         logger.error('Could not process %s\n%s', f, e,
                             exc_info=self.settings.get('DEBUG', False))
+                        self._add_failed_source_path(f)
                         continue
 
-                    if not contents.is_valid_content(entity, f):
+                    if not contents.is_valid_content(entity_or_draft, f):
+                        self._add_failed_source_path(f)
                         continue
 
-                    self.cache_data(f, entity)
+                    if entity_or_draft.status.lower() == "published":
+                        all_entities.append(entity_or_draft)
+                    elif entity_or_draft.status.lower() == "draft":
+                        all_drafts.append(entity_or_draft)
+                        self.add_source_path(entity_or_draft)
+                        continue
+                    else:
+                        logger.warning("Unknown status '%s' for file %s, skipping it.",
+                                       entity_or_draft.status, f)
+                        self._add_failed_source_path(f)
+                        continue
 
-                self.add_source_path(entity)
+                    self.cache_data(f, entity_or_draft)
 
-                if entity.status.lower() == "published":
-                    all_entities.append(entity)
-                elif entity.status.lower() == "draft":
-                    all_drafts.append(entity)
-                else:
-                    logger.warning("Unknown status '%s' for file %s, skipping it.",
-                                   entity.status, f)
+                self.add_source_path(entity_or_draft)
 
-            self.entities, self.translations = process_translations(all_entities)
+            self.entities, self.translations = process_translations(
+                all_entities)
             self.drafts, self.drafts_translations = \
                 process_translations(all_drafts)
 
-            custom_sort_attr = self.settings.get("SORT_ATTRIBUTES", [])
-
-            self.sort_attrs = ["date"]
-
-            if custom_sort_attr:
-                self.sort_attrs = custom_sort_attr + self.sort_attrs
-
-            self.entities.sort(key=attrgetter(*self.sort_attrs), reverse=True)
+            sorter = self.settings["SORTER"]
+            sorter(self.entities)
 
             entity_subgenerator_pretaxonomy.send(self)
 
-            for entity in self.entities:
+            for entity_or_draft in self.entities:
                 # only main entities are listed in categories and tags
                 # not translations
-                if hasattr(entity, 'category'):
-                    self.categories[entity.category].append(entity)
-                if hasattr(entity, 'tags'):
-                    for tag in entity.tags:
-                        self.tags[tag].append(entity)
-                # ignore blank authors as well as undefined
-                for author in getattr(entity, 'authors', []):
-                    if author.name != '':
-                        self.authors[author].append(entity)
-
-            # create tag cloud
-            tag_cloud = defaultdict(int)
-            for entity in self.entities:
-                for tag in getattr(entity, 'tags', []):
-                    tag_cloud[tag] += 1
-
-            tag_cloud = sorted(tag_cloud.items(), key=itemgetter(1), reverse=True)
-            tag_cloud = tag_cloud[:self.settings.get('TAG_CLOUD_MAX_ITEMS')]
-
-            tags = list(map(itemgetter(1), tag_cloud))
-            if tags:
-                max_count = max(tags)
-            steps = self.settings.get('TAG_CLOUD_STEPS', 1)
-
-            # calculate word sizes
-            self.tag_cloud = [
-                (
-                    tag,
-                    int(math.floor(steps - (steps - 1) * math.log(count)
-                        / (math.log(max_count)or 1)))
-                )
-                for tag, count in tag_cloud
-            ]
-            # put words in chaos
-            random.shuffle(self.tag_cloud)
+                if hasattr(entity_or_draft, 'category'):
+                    self.categories[entity_or_draft.category].append(entity_or_draft)
+                if hasattr(entity_or_draft, 'tags'):
+                    for tag in entity_or_draft.tags:
+                        self.tags[tag].append(entity_or_draft)
+                for author in getattr(entity_or_draft, 'authors', []):
+                    self.authors[author].append(entity_or_draft)
 
             # and generate the output :)
 
@@ -483,11 +463,10 @@ class EntityGenerator(generators.Generator):
             self.readers.save_cache()
             entity_subgenerator_finalized.send(self)
 
-
         def generate_output(self, writer):
             self.generate_feeds(writer)
             self.generate_pages(writer)
-
+            entity_subgenerator_writer_finalized.send(self, writer=writer)
 
         class SubGeneratorContext:
             def __init__(self, **kwds):
@@ -506,9 +485,9 @@ class EntityGenerator(generators.Generator):
 
             return context
 
-
     def __init__(self, *args, **kwargs):
         """ Initialize properties """
+        self.entities = []
         self.entity_types = {}
         super(EntityGenerator, self).__init__(*args, **kwargs)
 
@@ -528,7 +507,7 @@ class EntityGenerator(generators.Generator):
             generator_factory = entity_type_settings.pop("SUBGENERATOR_CLASS")
             if not callable(generator_factory):
                 import importlib
-                module_name, class_name = entity_type_generator.rsplit('.', 1)
+                module_name, class_name = generator_factory.rsplit('.', 1)
                 module = importlib.import_module(module_name)
                 generator_factory = getattr(module, class_name)
 
@@ -542,9 +521,12 @@ class EntityGenerator(generators.Generator):
         context_update_fields = ['entity_types']
 
         for entity_type, generator in self.entity_types.items():
+            logger.debug("Generating context for entities of type {0}".format(generator.entity_type))
             generator.generate_context()
             setattr(self, entity_type.lower(), generator.get_context())
             context_update_fields.append(entity_type.lower())
+
+            self.entities += generator.entities
 
         logger.debug("Context update fields: %s" % str(context_update_fields))
 
@@ -553,6 +535,7 @@ class EntityGenerator(generators.Generator):
 
     def generate_output(self, writer):
         for generator in self.entity_types.values():
+            logger.debug("Generating output for entities of type {0}".format(generator.entity_type))
             generator.generate_output(writer)
 
         entity_writer_finalized.send(self, writer=writer)
