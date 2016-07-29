@@ -79,7 +79,7 @@ Changes from default
 - ``PAGE_EXCLUDES`` and ``ARTICLE_EXCLUDES`` are replaced by ``EXCLUDES``.
 - ``PAGE_URL``, ``ARTICLE_URL``, ``PAGE_SAVE_AS`` and ``ARTICLE_SAVE_AS`` replaced by
   generic ``<entity_name>_URL`` and ``<entity_name>_SAVE_AS``.
-- ``ARTICLE_ORDER_BY`` and ``PAGE_ORDER_BY`` are removed in favour of `SORTER``.
+- ``ARTICLE_ORDER_BY`` and ``PAGE_ORDER_BY`` are removed in favour of  ``SORTER``.
 
 New settings
 ------------
