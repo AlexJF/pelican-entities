@@ -115,7 +115,7 @@ class Entity(contents.Page):
 def EntityFactory(name, mandatory_properties, default_template, BaseClass=Entity):
     base_mandatory_properties = ['title', 'date']
     mandatory_properties = set(base_mandatory_properties + mandatory_properties)
-    newclass = type(name, (BaseClass,),
+    newclass = type(str(name), (BaseClass,),
                     {'type': name,
                      'mandatory_properties': mandatory_properties,
                      'default_template': default_template})
