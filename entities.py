@@ -174,23 +174,25 @@ class EntityGenerator(generators.Generator):
                 if self.settings.get('CATEGORY_FEED_ATOM'):
                     writer.write_feed(entities, self.context,
                                       self.settings['CATEGORY_FEED_ATOM']
-                                      % cat.slug)
+                                      % cat.slug, feed_title=cat.name)
 
                 if self.settings.get('CATEGORY_FEED_RSS'):
                     writer.write_feed(entities, self.context,
                                       self.settings['CATEGORY_FEED_RSS']
-                                      % cat.slug, feed_type='rss')
+                                      % cat.slug, feed_title=cat.name,
+                                      feed_type='rss')
 
             for auth, entities in self.authors:
                 if self.settings.get('AUTHOR_FEED_ATOM'):
                     writer.write_feed(entities, self.context,
                                       self.settings['AUTHOR_FEED_ATOM']
-                                      % auth.slug)
+                                      % auth.slug, feed_title=auth.name)
 
                 if self.settings.get('AUTHOR_FEED_RSS'):
                     writer.write_feed(entities, self.context,
                                       self.settings['AUTHOR_FEED_RSS']
-                                      % auth.slug, feed_type='rss')
+                                      % auth.slug, feed_title=auth.name,
+                                      feed_type='rss')
 
             if (self.settings.get('TAG_FEED_ATOM')
                     or self.settings.get('TAG_FEED_RSS')):
@@ -198,12 +200,12 @@ class EntityGenerator(generators.Generator):
                     if self.settings.get('TAG_FEED_ATOM'):
                         writer.write_feed(entities, self.context,
                                           self.settings['TAG_FEED_ATOM']
-                                          % tag.slug)
+                                          % tag.slug, feed_title=tag.name)
 
                     if self.settings.get('TAG_FEED_RSS'):
                         writer.write_feed(entities, self.context,
                                           self.settings['TAG_FEED_RSS'] % tag.slug,
-                                          feed_type='rss')
+                                          feed_title=tag.name, feed_type='rss')
 
             if (self.settings.get('TRANSLATION_FEED_ATOM')
                     or self.settings.get('TRANSLATION_FEED_RSS')):
@@ -412,19 +414,20 @@ class EntityGenerator(generators.Generator):
                         self._add_failed_source_path(f)
                         continue
 
-                    if entity_or_draft.status.lower() == "published":
-                        all_entities.append(entity_or_draft)
-                    elif entity_or_draft.status.lower() == "draft":
-                        all_drafts.append(entity_or_draft)
-                        self.add_source_path(entity_or_draft)
-                        continue
-                    else:
+                    known_statuses = ("published", "draft")
+
+                    if entity_or_draft.status.lower() not in known_statuses:
                         logger.warning("Unknown status '%s' for file %s, skipping it.",
                                        entity_or_draft.status, f)
                         self._add_failed_source_path(f)
                         continue
 
                     self.cache_data(f, entity_or_draft)
+
+                if entity_or_draft.status.lower() == "published":
+                    all_entities.append(entity_or_draft)
+                else:
+                    all_drafts.append(entity_or_draft)
 
                 self.add_source_path(entity_or_draft)
 
