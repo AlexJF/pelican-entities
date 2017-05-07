@@ -113,7 +113,7 @@ class Entity(contents.Page):
 
 
 def EntityFactory(name, mandatory_properties, default_template, BaseClass=Entity):
-    base_mandatory_properties = ['title', 'date']
+    base_mandatory_properties = ['title']
     mandatory_properties = set(base_mandatory_properties + mandatory_properties)
     newclass = type(str(name), (BaseClass,),
                     {'type': name,
@@ -237,6 +237,12 @@ class EntityGenerator(generators.Generator):
             """Generate per-year, per-month, and per-day archives."""
 
             if not self.settings.get('ARCHIVE_TEMPLATE', None):
+                return
+
+            if 'date' not in self.settings.get('MANDATORY_PROPERTIES'):
+                logger.warning("Cannot generate period archives on entity type "
+                               "without mandatory date property: %s",
+                               self.entity_type)
                 return
 
             template = self.get_template(\

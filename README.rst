@@ -86,7 +86,7 @@ New settings
 - ``DEFAULT_TEMPLATE``: Template to use by default when generating pages for
   that entity type.
 - ``MANDATORY_PROPERTIES``: List of properties that has to be defined for an
-  entity to be considered valid (by default, just date).
+  entity to be considered valid (by default, just title).
 - ``SORTER``: Function taking list of entities as argument and which is responsible
   for sorting it as desired. Default value is the result of a call to
   ``entities.attribute_list_sorter(["date"], reverse=True)``
