@@ -1,3 +1,6 @@
+* 07/05/2017 - 0.3.0
+    * Included some generator fixes from core Pelican.
+    * Allowed to make date attribute non-mandatory.
 * 29/07/2016 - 0.2.0
     * Updated some stuff for Pelican 3.6.0
     * More customizable entity sorting with possibility of user-defined `SORTER`.
