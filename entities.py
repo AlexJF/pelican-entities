@@ -103,7 +103,7 @@ def get_default_entity_type_settings(entity_type):
     settings['AUTHOR_SAVE_AS'] = os.path.join(entity_type_lower, 'author', '{slug}.html')
 
     settings['DIRECT_TEMPLATES'] = []
-    settings['PAGINATED_DIRECT_TEMPLATES'] = []
+    settings['PAGINATED_TEMPLATES'] = {}
 
     return settings
 
@@ -303,7 +303,7 @@ class EntityGenerator(generators.Generator):
 
         def generate_direct_templates(self, write):
             """Generate direct templates pages"""
-            PAGINATED_TEMPLATES = self.settings['PAGINATED_DIRECT_TEMPLATES']
+            PAGINATED_TEMPLATES = self.settings['PAGINATED_TEMPLATES']
             for template in self.settings['DIRECT_TEMPLATES']:
                 paginated = {}
                 if template in PAGINATED_TEMPLATES:
@@ -316,6 +316,7 @@ class EntityGenerator(generators.Generator):
                 write(save_as, self.get_template(template),
                       self.context, entity_type=self.entity_type, paginated=paginated,
                       direct=True, url=save_as.replace('\\', '/'),
+                      template_name=template,
                       page_name=os.path.splitext(save_as)[0])
 
         def generate_tags(self, write):
@@ -416,7 +417,7 @@ class EntityGenerator(generators.Generator):
                         self._add_failed_source_path(f)
                         continue
 
-                    if not contents.is_valid_content(entity_or_draft, f):
+                    if not entity_or_draft.is_valid():
                         self._add_failed_source_path(f)
                         continue
 
