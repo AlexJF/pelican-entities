@@ -416,7 +416,7 @@ class EntityGenerator(generators.Generator):
                         self._add_failed_source_path(f)
                         continue
 
-                    if not contents.is_valid_content(entity_or_draft, f):
+                    if not entity_or_draft.is_valid():
                         self._add_failed_source_path(f)
                         continue
 
