@@ -181,13 +181,13 @@ This is the configuration I'm using on my site:
             "ARTICLE_SAVE_AS": "blog/{category}/{slug}/index.html",
             "PATH_METADATA": r".*/(?P<category>[^/]+)/(?P<date>\d{4}/\d{2}/\d{2})/(?P<slug>[^/]+)/.*",
             "DIRECT_TEMPLATES": ["blog"],
-            "PAGINATED_TEMPLATES": {"blog": None},
+            "PAGINATED_TEMPLATES": {"blog": None, "blog_category": None},
             "BLOG_SAVE_AS": "blog/index.html",
             "CATEGORY_TEMPLATE": "blog_category",
             "CATEGORY_URL": "blog/{slug}/",
             "CATEGORY_SAVE_AS": os.path.join("blog", "{slug}", "index.html"),
             "FEED_ATOM": os.path.join("blog", "feeds", "atom.xml"),
-            "CATEGORY_FEED_ATOM": os.path.join("blog", "feeds", "%s.atom.xml")
+            "CATEGORY_FEED_ATOM": os.path.join("blog", "feeds", "{slug}.atom.xml")
         },
         "Project": {
             "PATHS": ["projects"],
@@ -196,13 +196,13 @@ This is the configuration I'm using on my site:
             "PROJECT_SAVE_AS": "projects/{category}/{slug}/index.html",
             "PATH_METADATA": r".*/(?P<category>[^/]+)/(?P<slug>[^/]+)/.*",
             "DIRECT_TEMPLATES": ["projects"],
-            "PAGINATED_TEMPLATES": {"projects": None},
+            "PAGINATED_TEMPLATES": {"projects": None, "project_category": None},
             "PROJECTS_SAVE_AS": "projects/index.html",
             "CATEGORY_TEMPLATE": "project_category",
             "CATEGORY_URL": 'projects/{slug}/',
             "CATEGORY_SAVE_AS": os.path.join('projects', '{slug}', 'index.html'),
             "FEED_ATOM": os.path.join("projects", "feeds", "atom.xml"),
-            "CATEGORY_FEED_ATOM": os.path.join("projects", "feeds", "%s.atom.xml")
+            "CATEGORY_FEED_ATOM": os.path.join("projects", "feeds", "{slug}.atom.xml")
         }
     }
 

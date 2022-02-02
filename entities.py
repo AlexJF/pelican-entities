@@ -228,7 +228,7 @@ class EntityGenerator(generators.Generator):
                     writer.write_feed(
                         entities,
                         self.context,
-                        self.settings["AUTHOR_FEED_ATOM"].format(slug=cat.slug),
+                        self.settings["AUTHOR_FEED_ATOM"].format(slug=auth.slug),
                         self.settings.get(
                             "AUTHOR_FEED_ATOM_URL", self.settings["AUTHOR_FEED_ATOM"]
                         ).format(slug=auth.slug),
@@ -239,7 +239,7 @@ class EntityGenerator(generators.Generator):
                     writer.write_feed(
                         entities,
                         self.context,
-                        self.settings["AUTHOR_FEED_RSS"].format(slug=cat.slug),
+                        self.settings["AUTHOR_FEED_RSS"].format(slug=auth.slug),
                         self.settings.get(
                             "AUTHOR_FEED_RSS_URL", self.settings["AUTHOR_FEED_RSS"]
                         ).format(slug=auth.slug),
@@ -253,7 +253,7 @@ class EntityGenerator(generators.Generator):
                         writer.write_feed(
                             entities,
                             self.context,
-                            self.settings["TAG_FEED_ATOM"].format(slug=cat.slug),
+                            self.settings["TAG_FEED_ATOM"].format(slug=tag.slug),
                             self.settings.get(
                                 "TAG_FEED_ATOM_URL", self.settings["TAG_FEED_ATOM"]
                             ).format(slug=tag.slug),
@@ -264,7 +264,7 @@ class EntityGenerator(generators.Generator):
                         writer.write_feed(
                             entities,
                             self.context,
-                            self.settings["TAG_FEED_RSS"].format(slug=cat.slug),
+                            self.settings["TAG_FEED_RSS"].format(slug=tag.slug),
                             self.settings.get(
                                 "TAG_FEED_RSS_URL", self.settings["TAG_FEED_RSS"]
                             ).format(slug=tag.slug),
@@ -406,11 +406,8 @@ class EntityGenerator(generators.Generator):
 
         def generate_direct_templates(self, write):
             """Generate direct templates pages"""
-            PAGINATED_TEMPLATES = self.settings["PAGINATED_TEMPLATES"]
             for template in self.settings["DIRECT_TEMPLATES"]:
-                paginated = {}
-                if template in PAGINATED_TEMPLATES:
-                    paginated = {"entities": self.entities}
+                paginated = {"entities": self.entities}
                 save_as = self.settings.get(
                     "%s_SAVE_AS" % template.upper(), "%s.html" % template
                 )
@@ -520,17 +517,25 @@ class EntityGenerator(generators.Generator):
                 writer.write_file, relative_urls=self.settings["RELATIVE_URLS"]
             )
 
-            # to minimize the number of relative path stuff modification
-            # in writer, articles pass first
-            self.generate_entities(write)
-            self.generate_period_archives(write)
-            self.generate_direct_templates(write)
+            original_settings = writer.settings
+            try:
+                # We need to override writer settings with this generator's ones
+                # otherwise we won't be able to paginate properly since the
+                # writer is not aware of our PAGINATED_TEMPLATES override
+                writer.settings = self.settings
+                # to minimize the number of relative path stuff modification
+                # in writer, articles pass first
+                self.generate_entities(write)
+                self.generate_period_archives(write)
+                self.generate_direct_templates(write)
 
-            # and subfolders after that
-            self.generate_tags(write)
-            self.generate_categories(write)
-            self.generate_authors(write)
-            self.generate_drafts(write)
+                # and subfolders after that
+                self.generate_tags(write)
+                self.generate_categories(write)
+                self.generate_authors(write)
+                self.generate_drafts(write)
+            finally:
+                writer.settings = original_settings
 
         def generate_context(self):
             """Add the entities into the shared context"""
@@ -626,19 +631,6 @@ class EntityGenerator(generators.Generator):
             self.authors = list(self.authors.items())
             self.authors.sort()
 
-            self._update_context(
-                (
-                    "entity_type",
-                    "entities",
-                    "translations",
-                    "drafts",
-                    "drafts_translations",
-                    "hidden_entities",
-                    "hidden_translations" "tags",
-                    "categories",
-                    "authors",
-                )
-            )
             self.save_cache()
             self.readers.save_cache()
             entity_subgenerator_finalized.send(self)
@@ -660,11 +652,30 @@ class EntityGenerator(generators.Generator):
                 if hasattr(e, "refresh_metadata_intersite_links"):
                     e.refresh_metadata_intersite_links()
 
+        class SubGeneratorContext:
+            def __init__(self, **kwds):
+                self.__dict__.update(kwds)
+
+        def get_context(self):
+            context = self.SubGeneratorContext()
+            context.type = self.entity_type
+            context.entities = self.entities
+            context.translations = self.translations
+            context.drafts = self.drafts
+            context.drafts_translations = self.drafts_translations
+            context.hidden_entities = self.hidden_entities
+            context.hidden_translations = self.hidden_translations
+            context.tags = self.tags
+            context.categories = self.categories
+            context.authors = self.authors
+
+            return context
+
     def __init__(self, *args, **kwargs):
         """Initialize properties"""
         self.entities = []
         self.entity_types = {}
-        super(EntityGenerator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         entity_types_settings = self.settings["ENTITY_TYPES"]
 
@@ -701,7 +712,7 @@ class EntityGenerator(generators.Generator):
                 )
             )
             generator.generate_context()
-            setattr(self, entity_type.lower(), generator.context)
+            setattr(self, entity_type.lower(), generator.get_context())
             context_update_fields.append(entity_type.lower())
 
             self.entities += generator.entities
