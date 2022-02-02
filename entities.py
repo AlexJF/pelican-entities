@@ -14,7 +14,6 @@ Each entity type may have its own set of settings that override the ones
 defined globally.
 """
 
-from __future__ import unicode_literals, print_function
 import os
 import math
 import random
@@ -34,7 +33,6 @@ from pelican.readers import METADATA_PROCESSORS
 from pelican import signals, generators
 import copy
 import calendar
-import six
 
 logger = logging.getLogger(__name__)
 
@@ -136,10 +134,10 @@ class EntityGenerator(generators.Generator):
             self.tags = defaultdict(list)
             self.categories = defaultdict(list)
             self.authors = defaultdict(list)
-            self.drafts = [] # only drafts in default language
+            self.drafts = []  # only drafts in default language
             self.drafts_translations = []
             self.sort_attrs = []
-            super(EntityGenerator.EntitySubGenerator, self).__init__(*args, cache_name=entity_type, **kwargs)
+            super().__init__(*args, cache_name=entity_type, **kwargs)
             entity_subgenerator_init.send(self)
 
         def generate_feeds(self, writer):
@@ -147,11 +145,13 @@ class EntityGenerator(generators.Generator):
 
             if self.settings.get('FEED_ATOM'):
                 writer.write_feed(self.entities, self.context,
-                                  self.settings['FEED_ATOM'])
+                                  self.settings['FEED_ATOM'], 
+                                  self.settings.get('FEED_ATOM_URL', self.settings['FEED_ATOM']))
 
             if self.settings.get('FEED_RSS'):
                 writer.write_feed(self.entities, self.context,
                                   self.settings['FEED_RSS'],
+                                  self.settings.get('FEED_RSS_URL', self.settings['FEED_RSS']),
                                   feed_type='rss')
 
             if (self.settings.get('FEED_ALL_ATOM')
@@ -163,35 +163,42 @@ class EntityGenerator(generators.Generator):
 
                 if self.settings.get('FEED_ALL_ATOM'):
                     writer.write_feed(all_entities, self.context,
-                                      self.settings['FEED_ALL_ATOM'])
+                                      self.settings['FEED_ALL_ATOM'],
+                                      self.settings.get('FEED_ALL_ATOM_URL', 
+                                      self.settings['FEED_ALL_ATOM']))
 
                 if self.settings.get('FEED_ALL_RSS'):
                     writer.write_feed(all_entities, self.context,
                                       self.settings['FEED_ALL_RSS'],
+                                      self.settings.get('FEED_ALL_RSS_URL', self.settings['FEED_ALL_RSS']),
                                       feed_type='rss')
 
             for cat, entities in self.categories:
                 if self.settings.get('CATEGORY_FEED_ATOM'):
                     writer.write_feed(entities, self.context,
-                                      self.settings['CATEGORY_FEED_ATOM']
-                                      % cat.slug, feed_title=cat.name)
+                                      self.settings['CATEGORY_FEED_ATOM'].format(slug=cat.slug),
+                                      self.settings.get('CATEGORY_FEED_ATOM_URL', self.settings['CATEGORY_FEED_ATOM']).format(slug=cat.slug),
+                                      feed_title=cat.name)
 
                 if self.settings.get('CATEGORY_FEED_RSS'):
                     writer.write_feed(entities, self.context,
-                                      self.settings['CATEGORY_FEED_RSS']
-                                      % cat.slug, feed_title=cat.name,
+                                      self.settings['CATEGORY_FEED_RSS'].format(slug=cat.slug),
+                                      self.settings.get('CATEGORY_FEED_RSS_URL', self.settings['CATEGORY_FEED_RSS']).format(slug=cat.slug),
+                                      feed_title=cat.name,
                                       feed_type='rss')
 
             for auth, entities in self.authors:
                 if self.settings.get('AUTHOR_FEED_ATOM'):
                     writer.write_feed(entities, self.context,
-                                      self.settings['AUTHOR_FEED_ATOM']
-                                      % auth.slug, feed_title=auth.name)
+                                      self.settings['AUTHOR_FEED_ATOM'].format(slug=cat.slug),
+                                      self.settings.get('AUTHOR_FEED_ATOM_URL', self.settings['AUTHOR_FEED_ATOM']).format(slug=auth.slug),
+                                      feed_title=auth.name)
 
                 if self.settings.get('AUTHOR_FEED_RSS'):
                     writer.write_feed(entities, self.context,
-                                      self.settings['AUTHOR_FEED_RSS']
-                                      % auth.slug, feed_title=auth.name,
+                                      self.settings['AUTHOR_FEED_RSS'].format(slug=cat.slug),
+                                      self.settings.get('AUTHOR_FEED_RSS_URL', self.settings['AUTHOR_FEED_RSS']).format(slug=auth.slug),
+                                      feed_title=auth.name,
                                       feed_type='rss')
 
             if (self.settings.get('TAG_FEED_ATOM')
@@ -199,13 +206,16 @@ class EntityGenerator(generators.Generator):
                 for tag, entities in self.tags.items():
                     if self.settings.get('TAG_FEED_ATOM'):
                         writer.write_feed(entities, self.context,
-                                          self.settings['TAG_FEED_ATOM']
-                                          % tag.slug, feed_title=tag.name)
+                                          self.settings['TAG_FEED_ATOM'].format(slug=cat.slug),
+                                          self.settings.get('TAG_FEED_ATOM_URL', self.settings['TAG_FEED_ATOM']).format(slug=tag.slug),
+                                          feed_title=tag.name)
 
                     if self.settings.get('TAG_FEED_RSS'):
                         writer.write_feed(entities, self.context,
-                                          self.settings['TAG_FEED_RSS'] % tag.slug,
-                                          feed_title=tag.name, feed_type='rss')
+                                          self.settings['TAG_FEED_RSS'].format(slug=cat.slug),
+                                          self.settings.get('TAG_FEED_RSS_URL', self.settings['TAG_FEED_RSS']).format(slug=tag.slug),
+                                          feed_title=tag.name,
+                                          feed_type='rss')
 
             if (self.settings.get('TRANSLATION_FEED_ATOM')
                     or self.settings.get('TRANSLATION_FEED_RSS')):
@@ -217,16 +227,20 @@ class EntityGenerator(generators.Generator):
                     if self.settings.get('TRANSLATION_FEED_ATOM'):
                         writer.write_feed(
                             items, self.context,
-                            self.settings['TRANSLATION_FEED_ATOM'] % lang)
+                            self.settings['TRANSLATION_FEED_ATOM'].format(lang=lang),
+                            self.settings.get('TRANSLATION_FEED_ATOM_URL', self.settings['TRANSLATION_FEED_ATOM']).format(lang=lang),
+                        )
                     if self.settings.get('TRANSLATION_FEED_RSS'):
                         writer.write_feed(
                             items, self.context,
-                            self.settings['TRANSLATION_FEED_RSS'] % lang,
+                            self.settings['TRANSLATION_FEED_RSS'].format(lang=lang),
+                            self.settings.get('TRANSLATION_FEED_RSS_URL', self.settings['TRANSLATION_FEED_RSS']).format(lang=lang),
                             feed_type='rss')
 
         def generate_entities(self, write):
             """Generate the entities."""
-            for entity in chain(self.translations, self.entities):
+            for entity in chain(self.translations, self.entities,
+                self.hidden_translations, self.hidden_entities):
                 entity_subgenerator_write_entity.send(self, content=entity)
                 write(entity.save_as, self.get_template(entity.template),
                       self.context, url=entity.url, entity=entity,
@@ -245,13 +259,19 @@ class EntityGenerator(generators.Generator):
                                self.entity_type)
                 return
 
-            template = self.get_template(\
-                self.settings['ARCHIVE_TEMPLATE'])
+            template_name = self.settings['ARCHIVE_TEMPLATE'];
+            template = self.get_template(template_name)
 
             period_save_as = {
                 'year': self.settings['YEAR_ARCHIVE_SAVE_AS'],
                 'month': self.settings['MONTH_ARCHIVE_SAVE_AS'],
                 'day': self.settings['DAY_ARCHIVE_SAVE_AS'],
+            }
+
+            period_url = {
+                'year': self.settings['YEAR_ARCHIVE_URL'],
+                'month': self.settings['MONTH_ARCHIVE_URL'],
+                'day': self.settings['DAY_ARCHIVE_URL'],
             }
 
             period_date_key = {
@@ -260,7 +280,7 @@ class EntityGenerator(generators.Generator):
                 'day': attrgetter('date.year', 'date.month', 'date.day')
             }
 
-            def _generate_period_archives(entities, key, save_as_fmt):
+            def _generate_period_archives(entities, key, save_as_fmt, url_fmt):
                 """Generate period archives from `dates`, grouped by
                 `key` and written to `save_as`.
                 """
@@ -274,14 +294,14 @@ class EntityGenerator(generators.Generator):
                     # period archive dates
                     date = archive[0].date
                     save_as = save_as_fmt.format(date=date)
+                    url = url_fmt.format(date=date)
                     context = self.context.copy()
 
                     if key == period_date_key['year']:
                         context["period"] = (_period,)
+                        context["period_num"] = (_period,)
                     else:
                         month_name = calendar.month_name[_period[1]]
-                        if not six.PY3:
-                            month_name = month_name.decode('utf-8')
                         if key == period_date_key['month']:
                             context["period"] = (_period[0],
                                                  month_name)
@@ -292,14 +312,16 @@ class EntityGenerator(generators.Generator):
 
                     write(save_as, template, context,
                           key=key,
-                          url=save_as.replace('\\', '/'),
+                          url=url,
+                          template_name=template_name,
                           dates=archive, entity_type=self.entity_type)
 
             for period in 'year', 'month', 'day':
                 save_as = period_save_as[period]
+                url = period_url[period]
                 if save_as:
                     key = period_date_key[period]
-                    _generate_period_archives(self.entities, key, save_as)
+                    _generate_period_archives(self.entities, key, save_as, url)
 
         def generate_direct_templates(self, write):
             """Generate direct templates pages"""
@@ -310,24 +332,27 @@ class EntityGenerator(generators.Generator):
                     paginated = {'entities': self.entities}
                 save_as = self.settings.get("%s_SAVE_AS" % template.upper(),
                                             '%s.html' % template)
+                url = self.settings.get("%s_URL" % template.upper(), '%s.html' % template)
                 if not save_as:
                     continue
 
                 write(save_as, self.get_template(template),
                       self.context, entity_type=self.entity_type, paginated=paginated,
-                      direct=True, url=save_as.replace('\\', '/'),
-                      template_name=template,
+                      template_name=template, url=url,
+                      direct=True,
                       page_name=os.path.splitext(save_as)[0])
 
         def generate_tags(self, write):
             """Generate Tags pages."""
 
-            if not self.settings.get('TAG_TEMPLATE', None):
+            tag_template_name = self.settings.get('TAG_TEMPLATE')
+            if not tag_template_name:
                 return
 
-            tag_template = self.get_template(self.settings['TAG_TEMPLATE'])
+            tag_template = self.get_template(tag_template_name)
             for tag, entities in self.tags.items():
                 write(tag.save_as, tag_template, self.context, tag=tag,
+                      template_name=tag_template_name,
                       entities=entities, paginated={'entities': entities},
                       entity_type=self.entity_type,
                       url=tag.url,
@@ -336,12 +361,14 @@ class EntityGenerator(generators.Generator):
         def generate_categories(self, write):
             """Generate category pages."""
 
-            if not self.settings.get('CATEGORY_TEMPLATE', None):
+            category_template_name = self.settings.get('CATEGORY_TEMPLATE', None)
+            if not category_template_name:
                 return
 
-            category_template = self.get_template(self.settings['CATEGORY_TEMPLATE'])
+            category_template = self.get_template(category_template_name)
             for cat, entities in self.categories:
                 write(cat.save_as, category_template, self.context,
+                      template_name=category_template_name,
                       category=cat, entities=entities,
                       paginated={'entities': entities},
                       entity_type=self.entity_type,
@@ -351,16 +378,18 @@ class EntityGenerator(generators.Generator):
         def generate_authors(self, write):
             """Generate Author pages."""
 
-            if not self.settings.get('Author_TEMPLATE', None):
+            author_template_name = self.settings.get('AUTHOR_TEMPLATE', None)
+            if not author_template_name:
                 return
 
-            author_template = self.get_template(self.settings['AUTHOR_TEMPLATE'])
+            author_template = self.get_template(author_template_name)
             for aut, entities in self.authors:
                 write(aut.save_as, author_template, self.context,
+                      template_name=author_template_name,
                       author=aut, entities=entities,
                       paginated={'entities': entities},
                       entity_type=self.entity_type,
-                      url=author.url,
+                      url=aut.url,
                       page_name=aut.page_name, all_entities=self.entities)
 
         def generate_drafts(self, write):
@@ -394,17 +423,18 @@ class EntityGenerator(generators.Generator):
 
             all_entities = []
             all_drafts = []
+            hidden_entities = []
             for f in self.get_files(
                     self.settings['PATHS'],
                     exclude=self.settings['EXCLUDES']):
-                entity_or_draft = self.get_cached_data(f, None)
-                if entity_or_draft is None:
+                entity = self.get_cached_data(f, None)
+                if entity is None:
                     entity_class = EntityFactory(
                         self.entity_type,
                         self.settings['MANDATORY_PROPERTIES'],
                         self.settings['DEFAULT_TEMPLATE'])
                     try:
-                        entity_or_draft = self.readers.read_file(
+                        entity = self.readers.read_file(
                             base_path=self.path, path=f, content_class=entity_class,
                             context=self.context,
                             preread_signal=entity_subgenerator_preread,
@@ -417,47 +447,49 @@ class EntityGenerator(generators.Generator):
                         self._add_failed_source_path(f)
                         continue
 
-                    if not entity_or_draft.is_valid():
+                    if not entity.is_valid():
                         self._add_failed_source_path(f)
                         continue
 
-                    known_statuses = ("published", "draft")
+                    self.cache_data(f, entity)
 
-                    if entity_or_draft.status.lower() not in known_statuses:
-                        logger.warning("Unknown status '%s' for file %s, skipping it.",
-                                       entity_or_draft.status, f)
-                        self._add_failed_source_path(f)
-                        continue
-
-                    self.cache_data(f, entity_or_draft)
-
-                if entity_or_draft.status.lower() == "published":
-                    all_entities.append(entity_or_draft)
+                if entity.status == "published":
+                    all_entities.append(entity)
+                elif entity.status == "draft":
+                    all_drafts.append(entity)
+                elif entity.status == "hidden":
+                    hidden_entities.append(entity)
                 else:
-                    all_drafts.append(entity_or_draft)
+                    logger.warning("Unknown status '%s' for file %s, skipping it.",
+                                    entity.status, f)
 
-                self.add_source_path(entity_or_draft)
-
-            self.entities, self.translations = process_translations(
-                all_entities)
-            self.drafts, self.drafts_translations = \
-                process_translations(all_drafts)
+                self.add_source_path(entity)
+                self.add_static_links(entity)
 
             sorter = self.settings["SORTER"]
-            sorter(self.entities)
+
+            def _process(entities):
+                origs, translations = process_translations(
+                    entities, translation_id=self.settings['ARTICLE_TRANSLATION_ID'])
+                sorter(origs)
+                return origs, translations
+
+            self.entities, self.translations = _process(all_entities)
+            self.hidden_entities, self.hidden_translations = _process(hidden_entities)
+            self.drafts, self.drafts_translations = _process(all_drafts)
 
             entity_subgenerator_pretaxonomy.send(self)
 
-            for entity_or_draft in self.entities:
+            for entity in self.entities:
                 # only main entities are listed in categories and tags
                 # not translations
-                if hasattr(entity_or_draft, 'category'):
-                    self.categories[entity_or_draft.category].append(entity_or_draft)
-                if hasattr(entity_or_draft, 'tags'):
-                    for tag in entity_or_draft.tags:
-                        self.tags[tag].append(entity_or_draft)
-                for author in getattr(entity_or_draft, 'authors', []):
-                    self.authors[author].append(entity_or_draft)
+                if hasattr(entity, 'category'):
+                    self.categories[entity.category].append(entity)
+                if hasattr(entity, 'tags'):
+                    for tag in entity.tags:
+                        self.tags[tag].append(entity)
+                for author in getattr(entity, 'authors', []):
+                    self.authors[author].append(entity)
 
             # and generate the output :)
 
@@ -469,6 +501,18 @@ class EntityGenerator(generators.Generator):
             self.authors = list(self.authors.items())
             self.authors.sort()
 
+            self._update_context((
+                'entity_type',
+                'entities',
+                'translations',
+                'drafts',
+                'drafts_translations',
+                'hidden_entities',
+                'hidden_translations'
+                'tags',
+                'categories',
+                'authors',
+            ))
             self.save_cache()
             self.readers.save_cache()
             entity_subgenerator_finalized.send(self)
@@ -478,22 +522,10 @@ class EntityGenerator(generators.Generator):
             self.generate_pages(writer)
             entity_subgenerator_writer_finalized.send(self, writer=writer)
 
-        class SubGeneratorContext:
-            def __init__(self, **kwds):
-                self.__dict__.update(kwds)
-
-        def get_context(self):
-            context = self.SubGeneratorContext()
-            context.type = self.entity_type
-            context.entities = self.entities
-            context.translations = self.translations
-            context.tags = self.tags
-            context.categories = self.categories
-            context.authors = self.authors
-            context.drafts = self.drafts
-            context.drafts_translations = self.drafts_translations
-
-            return context
+        def refresh_metadata_intersite_links(self):
+            for e in chain(self.entities, self.translations, self.drafts, self.drafts_translations, self.hidden_entities, self.hidden_translations):
+                if hasattr(e, 'refresh_metadata_intersite_links'):
+                    e.refresh_metadata_intersite_links()
 
     def __init__(self, *args, **kwargs):
         """ Initialize properties """
@@ -507,8 +539,6 @@ class EntityGenerator(generators.Generator):
             logger.debug("Found entity type: %s" % entity_type)
             entity_type_settings = get_default_entity_type_settings(entity_type)
             entity_type_settings.update(custom_entity_type_settings)
-
-            custom_settings = self.settings
 
             entity_type_settings = copy.copy(self.settings)
             entity_type_settings.update(get_default_entity_type_settings(entity_type))
@@ -533,7 +563,7 @@ class EntityGenerator(generators.Generator):
         for entity_type, generator in self.entity_types.items():
             logger.debug("Generating context for entities of type {0}".format(generator.entity_type))
             generator.generate_context()
-            setattr(self, entity_type.lower(), generator.get_context())
+            setattr(self, entity_type.lower(), generator.context)
             context_update_fields.append(entity_type.lower())
 
             self.entities += generator.entities

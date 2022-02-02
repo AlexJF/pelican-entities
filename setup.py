@@ -3,7 +3,7 @@ from setuptools import setup
 with open('README.rst') as f:
     long_description = f.read()
 
-version = '0.3.0'
+version = '1.0.0'
 
 setup(
 
@@ -17,7 +17,7 @@ setup(
     include_package_data = True,
 
     # Package dependencies:
-    install_requires = ['pelican>=3.7.0'],
+    install_requires = ['pelican>=4', '<5'],
 
     # Metadata for PyPI:
     author = 'Alexandre Fonseca',

@@ -1,3 +1,5 @@
+* 02/02/2022 - 1.0.0
+    * Update for Pelican 4.
 * 07/05/2017 - 0.3.0
     * Included some generator fixes from core Pelican.
     * Allowed to make date attribute non-mandatory.

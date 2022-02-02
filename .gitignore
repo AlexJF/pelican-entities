@@ -4,3 +4,4 @@ dist
 pelican_entities.egg-info
 *.iml
 .idea/*
+.venv
