@@ -39,7 +39,7 @@ Usage
               PAGE_PATHS = []
               ARTICLE_PATHS = []
               DIRECT_TEMPLATES = []
-              PAGINATED_DIRECT_TEMPLATES = []
+              PAGINATED_TEMPLATES = {}
 
    3. Specify entity types to use in your site and their settings:
 
@@ -120,6 +120,8 @@ New available variables
     - ``authors``: All authors of that entity type.
     - ``drafts``: All drafts of that entity type.
     - ``drafts_translations``: All draft translations of that entity type.
+    - ``hidden_entities``: All hidden entities of that entity type.
+    - ``hidden_translations``: All hidden translations of that entity type.
 
 - Entity page:
 
@@ -179,7 +181,7 @@ This is the configuration I'm using on my site:
             "ARTICLE_SAVE_AS": "blog/{category}/{slug}/index.html",
             "PATH_METADATA": r".*/(?P<category>[^/]+)/(?P<date>\d{4}/\d{2}/\d{2})/(?P<slug>[^/]+)/.*",
             "DIRECT_TEMPLATES": ["blog"],
-            "PAGINATED_DIRECT_TEMPLATES": ["blog"],
+            "PAGINATED_TEMPLATES": {"blog": None},
             "BLOG_SAVE_AS": "blog/index.html",
             "CATEGORY_TEMPLATE": "blog_category",
             "CATEGORY_URL": "blog/{slug}/",
@@ -194,7 +196,7 @@ This is the configuration I'm using on my site:
             "PROJECT_SAVE_AS": "projects/{category}/{slug}/index.html",
             "PATH_METADATA": r".*/(?P<category>[^/]+)/(?P<slug>[^/]+)/.*",
             "DIRECT_TEMPLATES": ["projects"],
-            "PAGINATED_DIRECT_TEMPLATES": ["projects"],
+            "PAGINATED_TEMPLATES": {"projects": None},
             "PROJECTS_SAVE_AS": "projects/index.html",
             "CATEGORY_TEMPLATE": "project_category",
             "CATEGORY_URL": 'projects/{slug}/',
