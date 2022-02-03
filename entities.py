@@ -26,7 +26,7 @@ from operator import attrgetter
 import pelican.contents as contents
 from pelican.utils import process_translations
 
-from pelican import signals, generators
+from pelican import signals, generators, get_plugin_name
 import copy
 import calendar
 
@@ -44,12 +44,38 @@ entity_subgenerator_preread = signal("entity_subgenerator_preread")
 entity_subgenerator_context = signal("entity_subgenerator_context")
 
 
+pelican = None
+
+
 def get_generators(pelican_object):
+    global pelican
+    pelican = pelican_object
+
     return EntityGenerator
+
+
+def extract_summaries_from_entities(generators):
+    for plugin in pelican.plugins:
+        plugin_name = get_plugin_name(plugin)
+        if plugin_name == "summary":
+            logger.debug("Summarizing entities")
+            for generator in generators:
+                if isinstance(generator, EntityGenerator):
+                    for entity in generator.entities:
+                        logger.debug("Summarizing entity '%s'\n", entity.title)
+                        try:
+                            plugin.extract_summary(entity)
+                        except Exception as e:
+                            logger.error(
+                                "Error summarizing entity '%s'\n",
+                                entity.title,
+                                exc_info=e,
+                            )
 
 
 def register():
     signals.get_generators.connect(get_generators)
+    signals.all_generators_finalized.connect(extract_summaries_from_entities)
 
 
 def attribute_list_sorter(attr_list, reverse=False):
@@ -673,9 +699,10 @@ class EntityGenerator(generators.Generator):
 
     def __init__(self, *args, **kwargs):
         """Initialize properties"""
+        super().__init__(*args, **kwargs)
+
         self.entities = []
         self.entity_types = {}
-        super().__init__(*args, **kwargs)
 
         entity_types_settings = self.settings["ENTITY_TYPES"]
 
@@ -700,6 +727,7 @@ class EntityGenerator(generators.Generator):
 
             entity_type_generator = generator_factory(entity_type, *args, **kwargs)
             self.entity_types[entity_type] = entity_type_generator
+
         entity_generator_init.send(self)
 
     def generate_context(self):
